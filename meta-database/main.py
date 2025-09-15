@@ -2,6 +2,7 @@ import datetime
 from typing import Union, Annotated
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.concurrency import asynccontextmanager
 from sqlmodel import Field, Session, SQLModel, create_engine
 
 class Job(SQLModel, table=True):
@@ -28,9 +29,11 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 app = FastAPI()
 
-@app.on_event("startup")
-def on_startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     create_db_and_tables()
+    yield
+
 
 @app.post("/")
 def create_job(job_id: str, session: SessionDep):
