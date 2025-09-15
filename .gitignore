@@ -1,0 +1,33 @@
+# python generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# venv
+.venv
+
+# covarage
+.coverage
+coverage.xml
+.coverage*
+# interrogate
+interrogate_badge.svg
+
+.idea
+.cloudstorage
+.mypy_cache
+.pytest_cache
+.ruff_cache
+
+
+# R
+.RData
+.Rhistory
+data
+
+
+# otter
+work/
