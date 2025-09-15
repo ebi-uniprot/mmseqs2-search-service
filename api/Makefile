@@ -43,3 +43,6 @@ help: ## This is help
 
 build-docker: ## build docker image
 	docker build -t $(APP_NAME):$(VERSION) --no-cache -f Dockerfile .
+
+test-api: ## Test the API
+	uv run api
