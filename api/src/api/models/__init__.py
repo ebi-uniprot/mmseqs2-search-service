@@ -1,6 +1,7 @@
 """Models for the API."""
 
 import hashlib
+import json
 from functools import cached_property
 
 from pydantic import BaseModel
@@ -20,6 +21,6 @@ class FastaBlobModel(BaseModel):
         """Get the number of lines in the fasta content."""
         return self.fasta_content.count("\n")
 
-    def to_message(self) -> dict:
+    def to_message(self) -> str:
         """Convert to the rabbit mq message."""
-        return {"uuid": self.uuid, "fasta_content": self.fasta_content}
+        return json.dumps({"uuid": self.uuid, "fasta_content": self.fasta_content})

@@ -3,6 +3,7 @@
 import typer
 import uvicorn
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 cli = typer.Typer()
@@ -11,6 +12,7 @@ cli = typer.Typer()
 class App:
     def __init__(self) -> None:
         self.app = FastAPI()
+        self.app.mount("/results", StaticFiles(directory="/static"), name="static")
 
         from api.controllers import router
 
