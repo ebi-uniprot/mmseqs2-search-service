@@ -2,10 +2,6 @@
 
 Installing the project
 
-
-```
-cd api
-uv sync --all-groups
-```
-```
+```{bash}
+make dev
 ```
