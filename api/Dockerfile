@@ -25,4 +25,4 @@ COPY README.md /app/README.md
 WORKDIR /app
 RUN python -m pip install .
 
-ENTRYPOINT [ "api" ]
+ENTRYPOINT [ "api"]

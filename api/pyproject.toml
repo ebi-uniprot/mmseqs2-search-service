@@ -7,10 +7,15 @@ authors = [
     { name = "Szymon Szyszkowski", email = "69353402+project-defiant@users.noreply.github.com" },
 ]
 requires-python = ">=3.12"
-dependencies = ["fastapi>=0.116.1", "pydantic>=2.11.9", "typer>=0.17.4"]
+dependencies = [
+    "fastapi[standard]>=0.116.1",
+    "loguru>=0.7.3",
+    "typer>=0.17.4",
+    "uvicorn>=0.35.0",
+]
 
 [project.scripts]
-api = "api:main"
+api = "api:cli"
 
 
 [build-system]
@@ -33,7 +38,7 @@ dev = [
 [tool.pytest.ini_options]
 addopts = "-n0 --doctest-modules --cov=src/api --cov-report=xml -s -p no:warnings --cov-report term-missing --cov-fail-under=80"
 pythonpath = ["src/"]
-testpaths = ["tests/", "src/mmseq2s_api"]
+testpaths = ["tests/api"]
 
 
 [tool.ruff]
