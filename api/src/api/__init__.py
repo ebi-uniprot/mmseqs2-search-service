@@ -16,7 +16,11 @@ class App:
 
         self.app.include_router(router)
 
-    @cli.command()
     def run(self, port: int = 8084, host: str = "0.0.0.0") -> None:
         logger.info("Starting API at http://{}:{}", host, port)
         uvicorn.run(self.app, host=host, port=port)
+
+
+@cli.command()
+def run(port: int = 8084, host: str = "0.0.0.0"):
+    App().run(port=port, host=host)

@@ -1,3 +1,4 @@
+import pika
 from fastapi import APIRouter
 
 router = APIRouter(tags=["status"])
@@ -5,6 +6,9 @@ router = APIRouter(tags=["status"])
 
 @router.post("/submit/")
 def submit() -> dict:
+    connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
+    channel = connection.channel()
+
     return {"status": "ok"}
 
 
