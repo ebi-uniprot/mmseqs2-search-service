@@ -3,20 +3,17 @@ from typing import Annotated
 import pika
 from fastapi import APIRouter
 
-from api.models import FileModel
+from api.models import FastaBlobModel
 
 router = APIRouter(tags=["status"])
-from fastapi import File
 from loguru import logger
 
 
 @router.post("/submit")
-async def submit(file: Annotated[bytes, File(description="A file read as bytes")]) -> dict:
-    logger.info("Received file of size: {} bytes", len(file))
-    f = FileModel(file=file)
+async def submit(fasta_content: FastaBlobModel) -> dict:
+    logger.info("Received fasta content of size: {}", len(fasta_content))
 
-    # Generate the uuid
-    return {"status": "ok", "uuid": f.uuid}
+    return {"status": "ok", "uuid": fasta_content.uuid}
 
 
 @router.get("/status/{uuid}")

@@ -1,21 +1,25 @@
 """Models for the API."""
 
 import hashlib
+from functools import cached_property
 
-from fastapi import File
 from pydantic import BaseModel
 
 
-class FileModel(BaseModel):
-    file: bytes = File(description="A file read as bytes")
+class FastaBlobModel(BaseModel):
+    fasta_content: str
 
-    @property
+    @cached_property
     def uuid(self) -> str:
-        """Generate a UUID for the file based on its contents."""
-        return hash_file(self.file)
+        """Generate a UUID for the fasta content based on its contents."""
+        h = hashlib.new("sha256")
+        h.update(self.fasta_content.encode("utf-8"))
+        return h.hexdigest()
 
+    def __len__(self) -> int:
+        """Get the number of lines in the fasta content."""
+        return self.fasta_content.count("\n")
 
-def hash_file(file: bytes, algo="sha256") -> str:
-    h = hashlib.new(algo)
-    h.update(file)
-    return h.hexdigest()
+    def to_message(self) -> dict:
+        """Convert to the rabbit mq message."""
+        return {"uuid": self.uuid, "fasta_content": self.fasta_content}
