@@ -8,8 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends wget tar \
 # Install MMseqs2 for current arch (amd64: AVX2→SSE4.1; arm64: ARM64)
 RUN set -e; \
     if [ "$TARGETARCH" = "amd64" ]; then \
-    wget -qO /tmp/mm.tgz https://mmseqs.com/latest/mmseqs-linux-avx2.tar.gz || \
-    wget -qO /tmp/mm.tgz https://mmseqs.com/latest/mmseqs-linux-sse41.tar.gz; \
+    wget -qO /tmp/mm.tgz https://mmseqs.com/latest/mmseqs-linux-avx2.tar.gz \
     elif [ "$TARGETARCH" = "arm64" ]; then \
     wget -qO /tmp/mm.tgz https://mmseqs.com/latest/mmseqs-linux-arm64.tar.gz; \
     else \
