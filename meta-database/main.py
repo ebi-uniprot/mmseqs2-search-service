@@ -69,6 +69,8 @@ def update_job(job_id: str, job: Job, session: SessionDep) -> Job:
     stored_job = session.get(Job, job_id)
     if not stored_job:
         raise HTTPException(status_code=404, detail="Job not found")
+    # TODO: enforce only change queued --> running|failed
+    # TODO: enforce only change running --> failed|finished
     job_data = job.model_dump(exclude_unset=True)
     stored_job.sqlmodel_update(job_data)
     session.add(stored_job)

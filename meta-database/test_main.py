@@ -75,9 +75,14 @@ def test_create_job(client):
     assert response.json() == db_get_running_job
 
     # checking if queued job is now running
-    # checking if job is running
     # response = client.get(
     #     f"/job/{db_get_running_job['job_id']}"
     # )
     # assert response.status_code == 200
     # assert response.json() == json.dumps(db_get_running_job)
+
+    # worker sends failed job
+    # check failed status in db
+
+    # worker sends finished job
+    # check finished job in db
