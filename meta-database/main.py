@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
 
 @app.post("/job/")
 def create_job(job_id: str, session: SessionDep):
-    job = Job(job_id=job_id, status="created", submitted_at=datetime.datetime.now())
+    job = Job(job_id=job_id, status="QUEUED", submitted_at=datetime.datetime.now())
     session.add(job)
     session.commit()
     session.refresh(job)
@@ -49,11 +49,13 @@ def update_job(job_id: str, job: Job, session: SessionDep) -> Job:
     if not job_db:
         raise HTTPException(status_code=404, detail="Job not found")
     job_data = job.model_dump(exclude_unset=True) 
+    if job_data.get("status") == "FINISHED":
+        job_data["completed_at"] = datetime.datetime.now()
     job_db.sqlmodel_update(job_data)
     session.add(job_db)
     session.commit()
     session.refresh(job_db)
-    return job_db
+    return {}
 
 @app.get("/job/{job_id}")
 def retrieve_job(job_id: str, session: SessionDep) -> Job:
