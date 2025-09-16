@@ -1,4 +1,4 @@
-"""Db handlers."""
+"""Database handlers."""
 
 from urllib.parse import urljoin
 
@@ -10,12 +10,20 @@ from api.status import TaskStatus
 
 
 class MetaDataDb:
+    """Class to handle interactions with the metadata database."""
+
     def __init__(self, endpoint: str, client: AsyncClient) -> None:
+        """Initialize the MetaDataDb handler.
+
+        Args:
+            endpoint (str): The metadata database endpoint.
+            client (AsyncClient): The HTTPX async client to use for requests.
+        """
         self.client = client
         self.post_job_url = urljoin(endpoint, "job")
         self.get_job_status_url = urljoin(endpoint, "job")
 
-    async def _post_job(self, data: MetadataDbPostRequest) -> MetaDataDbPostResponse:
+    async def post_job(self, data: MetadataDbPostRequest) -> MetaDataDbPostResponse:
         """Post job to the metadata database.
 
         The expected status codes are:
@@ -35,10 +43,14 @@ class MetaDataDb:
                 case 200:
                     return MetaDataDbPostResponse(job_id=data.job_id, status=TaskStatus.QUEUED)
                 case _:
-                    raise HTTPException(status_code=500, detail="Unexpected error")
+                    raise HTTPException(status_code=500, detail=f"Unexpected error while posting job {data.job_id}.")
 
-    async def _get_job(self, data: MetadataDbGetRequest) -> Response:
+    async def get_job_response(self, data: MetadataDbGetRequest) -> Response:
         """Intermediate step reused to run the get request to the metadata db.
+
+        This is part of the get_job coroutine and is utilized to get the raw HTTPX response
+        for the /submit/{job_id} endpoint when we need to check if the job_id exists in the db,
+        which is indicated by a 404 response.
 
         Args:
             data (MetadataDbGetRequest): request object containing the job ID.
@@ -53,7 +65,7 @@ class MetaDataDb:
     async def get_job(self, data: MetadataDbGetRequest) -> MetaDataDbGetResponse:
         """Get the job status from the metadata database.
 
-        This coroutine should be used with the /status/{uuid} endpoint.
+        This coroutine should be used with the /status/{job_id} endpoint.
         The status for the job can be any status that is defined in the database.
 
         Args:
@@ -67,37 +79,13 @@ class MetaDataDb:
             MetaDataDbGetResponse: The job status response object.
 
         """
-        resp = await self._get_job(data=data)
+        resp = await self.get_job_response(data=data)
         match resp.status_code:
             case 200:
                 return MetaDataDbGetResponse(**resp.json())
             case 404:
-                raise HTTPException(status_code=404, detail=f"Job with {data.job_id} not submitted.")
+                raise HTTPException(status_code=404, detail=f"Failed to fetch {data.job_id} from database.")
             case _:
-                raise HTTPException(status_code=500, detail="Unexpected error")
-
-    async def submit_job(self, data: MetadataDbPostRequest) -> MetaDataDbPostResponse:
-        """Submit a job to the metadata database.
-
-        If the job already exists, it retrieves its status instead of creating a new entry.
-        The status messages produced by the coroutine are:
-            - QUEUED: Job was successfully queued in the database.
-            - FAILED: Job submission failed or an error occurred during the process.
-            - any other status from the existing job if it was already present in the database.
-
-        Args:
-            data (MetadataDbPostRequest): The job submission data.
-
-        Returns:
-            MetaDataDbPostResponse: The job submission response.
-        """
-        request_data = MetadataDbGetRequest(job_id=data.job_id)
-        initial_resp = await self._get_job(data=request_data)
-        match initial_resp.status_code:
-            case 404:
-                return await self._post_job(data)
-            case 200:
-                resp_obj = MetaDataDbGetResponse(**initial_resp.json())
-                return MetaDataDbPostResponse(job_id=resp_obj.job_id, status=resp_obj.status)
-            case _:
-                raise HTTPException(status_code=500, detail="Unexpected error")
+                raise HTTPException(
+                    status_code=500, detail=f"Unexpected error while fetching job status for {data.job_id}."
+                )

@@ -1,4 +1,4 @@
-"""Status messages for mmseqs2 job."""
+"""Status messages for database job."""
 
 from enum import StrEnum
 
