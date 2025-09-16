@@ -1,13 +1,11 @@
 from typing import TypedDict
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import JSONResponse
-from httpx import AsyncClient
 from loguru import logger
 
 from api.handlers.broker import BlockingQueueConnection
 from api.handlers.db import MetaDataDb
-from api.models.db import MetadataDbGetRequest, MetadataDbPostRequest
+from api.models.db import MetadataDbGetRequest, MetaDataDbGetResponse, MetadataDbPostRequest, MetaDataDbPostResponse
 from api.models.fasta_input import FastaBlobModel
 from api.status import TaskStatus
 
@@ -17,11 +15,11 @@ class StatusResponse(TypedDict):
     uuid: str
 
 
-def router(self, client: AsyncClient, db: MetaDataDb, queue: BlockingQueueConnection) -> APIRouter:
+def router(db: MetaDataDb, queue: BlockingQueueConnection) -> APIRouter:
     router = APIRouter(tags=["status"])
 
-    @router.post("/submit")
-    async def submit(content: FastaBlobModel) -> JSONResponse:
+    @router.post("/submit", response_model=MetaDataDbPostResponse, status_code=200)
+    async def submit(content: FastaBlobModel) -> MetaDataDbPostResponse:
         # When the model fails to validate FastaBlobModel the fastapi
         # will automatically send the response 422 Unprocessable Entity.
         logger.debug("New job: {}", content.job_id)
@@ -37,15 +35,13 @@ def router(self, client: AsyncClient, db: MetaDataDb, queue: BlockingQueueConnec
         logger.info("Publishing to database")
 
         # Database handling
-        resp = await db.submit_job(MetadataDbPostRequest(job_id=content.job_id))
         # Always return 200, even if the actual status of the job is FAILED
-        return JSONResponse(content=resp.model_dump(), status_code=200)
+        return await db.submit_job(MetadataDbPostRequest(job_id=content.job_id))
 
-    @router.get("/status/{job_id}")
-    async def status(job_id: str) -> JSONResponse:
+    @router.get("/status/{job_id}", response_model=MetaDataDbGetResponse, status_code=200)
+    async def status(job_id: str) -> MetaDataDbGetResponse:
         logger.info(f"Got GET request with {job_id}")
-        resp = await db.get_job(data=MetadataDbGetRequest(job_id=job_id))
-        return JSONResponse(content=resp.model_dump(), status_code=200)
+        return await db.get_job(data=MetadataDbGetRequest(job_id=job_id))
 
     @router.get("/")
     async def healthcheck():

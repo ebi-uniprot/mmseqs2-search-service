@@ -14,7 +14,7 @@ class FastaBlobModel(BaseModel):
 
     fasta: str
 
-    @field_validator("fasta_content", mode="after")
+    @field_validator("fasta", mode="after")
     @classmethod
     def validate_fasta_string(cls, fasta_str: str) -> str:
         """Validate the fasta string by attempting to parse it."""
