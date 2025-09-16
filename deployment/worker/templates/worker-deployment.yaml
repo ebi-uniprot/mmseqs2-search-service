@@ -38,6 +38,8 @@ spec:
               value: {{ .Values.rabbitmq.userName | quote }}
             - name: PASSWORD
               value: {{ .Values.rabbitmq.password | quote }}
+            - name: DB_API_BASE_URL
+              value: {{ printf "http://%s:%s" .Values.metadb.host .Values.metadb.port | quote }}
           resources:
             limits:
               memory: "4Gi"

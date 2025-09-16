@@ -3,9 +3,10 @@ import json
 from queue_config import *
 import logging
 import sys
-import requests
 import os
 from mmseqs_service import MMSeqsService
+from datetime import datetime
+from job_status_updater import JobStatusUpdater
 
 # Rabbit related configuration with environment variable overrides
 RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", RABBITMQ_PORT))
@@ -24,24 +25,11 @@ logging.basicConfig(
 DB_DIR = "/app/mmseqs_db/swissprot"
 WORKSPACE_DIR = "/workspace"
 RESULT_DIR = "/results"
-DB_API_BASE_URL = "http://meta-database:8000"
+DB_API_BASE_URL = os.getenv("DB_API_BASE_URL","http://meta-database:8000")
 
 
-mmseqsService =  MMSeqsService(DB_DIR, WORKSPACE_DIR, RESULT_DIR)
-
-
-def update_job_status(job_id, job_status):
-    """Update job status in the database via API call."""
-    pass
-    # api_url = f"{DB_API_BASE_URL}/{job_id}"
-    # payload = {"status": job_status}
-    # try:
-    #     response = requests.patch(api_url, json=payload)
-    #     response.raise_for_status() # raises error if status_code >= 400
-    #     logging.info(f"Updated job {job_id} status to {job_status}")
-    # except requests.RequestException as e:
-    #     logging.error(f"Failed to update job status for {job_id}: {e}")
-    #     raise Exception(f"Failed to update job status for {job_id}: {e}")
+mmseqs_service =  MMSeqsService(DB_DIR, WORKSPACE_DIR, RESULT_DIR)
+job_status_updater = JobStatusUpdater(DB_API_BASE_URL)
 
 
 def handle_message(ch, method, properties, body):
@@ -50,11 +38,13 @@ def handle_message(ch, method, properties, body):
         job = json.loads(body)
         # step 1 set the status to Running
         logging.info(f"Received job: {job}")
-        update_job_status(job["job_id"], "Running")
+        job_status_updater.update_job_status(job["job_id"], "RUNNING")
         # step 2 search in mmseq2
-        mmseqsService.mmseqs2_search(job)
+        mmseqs_service.mmseqs2_search(job)
         # step 3 call the db api to save the result with status finished
-        update_job_status(job["job_id"], "Finished")
+        now = datetime.now()
+        time_str = now.strftime("%Y-%m-%d %H:%M:%S.%f")
+        job_status_updater.update_job_status(job["job_id"], "FINISHED", timestamp=time_str)
         ch.basic_ack(delivery_tag=method.delivery_tag)
     except Exception as e:
         logging.error("Failed to process job: %s", e, exc_info=True)

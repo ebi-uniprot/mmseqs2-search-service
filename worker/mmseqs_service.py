@@ -3,8 +3,6 @@ import subprocess
 import logging
 import tempfile
 import shutil
-import os
-import sys
 
 class MMSeqsService(object):
     def __init__(self, db_dir, workspace_dir, result_dir):

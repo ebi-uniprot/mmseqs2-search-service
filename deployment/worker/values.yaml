@@ -10,3 +10,7 @@ rabbitmq:
   queueName: task_queue
   userName: user
   password: 0CTopmP8ppyZp9zi
+
+metadb:
+  host: my-service
+  port: "8080"

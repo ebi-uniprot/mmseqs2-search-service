@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: metadb
-        image: db:0.1.0
+        image: metadb:dev
         imagePullPolicy: IfNotPresent
        
