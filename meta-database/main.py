@@ -53,12 +53,14 @@ class JobCreate(BaseModel):
 @app.post("/job/")
 async def create_job(job: JobCreate, session: SessionDep):
     job_id = job.job_id
+    if session.get(Job, job_id):
+        raise HTTPException(status_code=400, detail="Job ID already exists")
     print("Creating job with ID:", job_id)
     job = Job(job_id=job_id, status="QUEUED", submitted_at=datetime.datetime.now())
     session.add(job)
     session.commit()
     session.refresh(job)
-    return {}
+    return job
 
 
 @app.patch("/job/{job_id}", response_model=Job, response_model_exclude_none=True)
