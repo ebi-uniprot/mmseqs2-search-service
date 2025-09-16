@@ -36,6 +36,9 @@ class MetaDataDb:
         Returns:
             MetaDataDbPostResponse: The job submission response.
 
+        Raises:
+            HTTPException: If there is an unexpected error while posting the job (500).
+
         """
         async with self.client as c:
             resp = await c.post(url=self.post_job_url, data=data.model_dump())
@@ -72,8 +75,7 @@ class MetaDataDb:
             data (MetadataDbGetRequest): The request object containing the job ID.
 
         Raises:
-            ValueError: If the job is not found or if the response format is invalid.
-
+            HTTPException: If the job is not found or if the response format is invalid.
 
         Returns:
             MetaDataDbGetResponse: The job status response object.
