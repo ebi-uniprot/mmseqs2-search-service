@@ -14,11 +14,17 @@ mock_dir = Path("../mocks")
 with open(mock_dir / "worker_send_job_running_to_db.json") as f:
     worker_send_job_running_to_db = json.load(f)
 
+with open(mock_dir / "worker_send_job_failed_to_db.json") as f:
+    worker_send_job_failed_to_db = json.load(f)
+
 with open(mock_dir / "db_get_queued_job.json") as f:
     db_get_queued_job = json.load(f)
 
 with open(mock_dir / "db_get_running_job.json") as f:
     db_get_running_job = json.load(f)
+
+with open(mock_dir / "db_get_failed_job.json") as f:
+    db_get_failed_job = json.load(f)
 
 with open(mock_dir / "api_send_job_to_db.json") as f:
     api_send_job_to_db = json.load(f)
@@ -75,14 +81,21 @@ def test_create_job(client):
     assert response.json() == db_get_running_job
 
     # checking if queued job is now running
-    # response = client.get(
-    #     f"/job/{db_get_running_job['job_id']}"
-    # )
-    # assert response.status_code == 200
-    # assert response.json() == json.dumps(db_get_running_job)
+    response = client.get(f"/job/{db_get_running_job['job_id']}")
+    assert response.status_code == 200
+    assert response.json() == db_get_running_job
 
     # worker sends failed job
+    response = client.patch(
+        f"/job/{worker_send_job_failed_to_db['job_id']}", json={"status": "FAILED"}
+    )
+    assert response.status_code == 200
+    assert response.json() == worker_send_job_failed_to_db
+
     # check failed status in db
+    response = client.get(f"/job/{db_get_failed_job['job_id']}")
+    assert response.status_code == 200
+    assert response.json() == db_get_failed_job
 
     # worker sends finished job
     # check finished job in db
