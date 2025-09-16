@@ -48,7 +48,12 @@ spec:
           volumeMounts:
             - name: mmseqs-volume
               mountPath: /app/mmseqs_db
+            - name: mmseqs-results-volume
+              mountPath: /results
       volumes:
         - name: mmseqs-volume
           emptyDir: {}
+        - name: mmseqs-results-volume
+          persistentVolumeClaim:
+          claimName: mmseqs-writable-pvc
           

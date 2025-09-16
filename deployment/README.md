@@ -1,16 +1,16 @@
-### start RabbitMQ using helm command
+### Deploy RabbitMQ using helm command
 
 ``` 
-helm install my-release oci://registry-1.docker.io/bitnamicharts/rabbitmq
+helm install mmseqs oci://registry-1.docker.io/bitnamicharts/rabbitmq
 ```
 ### Get RabbitMQ password
 ```
-kubectl get secret --namespace default my-release-rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d
+kubectl get secret --namespace default mmseqs-rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d
 ```
 
-### Update password in worker/values.yaml
+#### Update password in worker/values.yaml
 
-### Before running helm deployment build the docker image locally
+## Deploy Worker Steps
 
 #### Build worker docker image
 ```
@@ -18,7 +18,7 @@ cd worker
 docker build -t worker-consumer:dev .
 ```
 
-### Load docker image in minkube
+#### Load docker image in minkube
 ```
 minikube profile list
 minikube image load worker-consumer:dev --profile=<PROFILE>
@@ -32,19 +32,19 @@ docker rmi worker-consumer:dev
 exit
 ```
 
-### Deploy worker
+#### Deploy worker in minikube
 
 ```
 cd deployment
 helm install worker-dev worker/
 ```
 
-### Publish Message to task_queue
+### Publish Message to task_queue to test
 #### Port Forwarding
 ```
-kubectl port-forward --namespace default svc/my-release-rabbitmq 15672:15672
+kubectl port-forward --namespace default svc/mmseqs-rabbitmq 15672:15672
 ```
-#### Open RabbitMQ Management Console in browser and login
+#### Open RabbitMQ Management Console in browser and publish message
 ```
 http://127.0.0.1:15672/#/
 go to --> http://127.0.0.1:15672/#/queues/%2F/task_queue

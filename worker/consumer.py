@@ -28,7 +28,6 @@ DB_PATH = Path("/app/mmseqs_db/swissprot")
 WORKSPACE_DIR = Path("/workspace")
 WORKSPACE_DIR.mkdir(parents=True, exist_ok=True)
 RESULT_DIR = Path("/results")
-RESULT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def mmseqs2_search(job):

@@ -5,8 +5,8 @@
 replicaCount: 1
 # update below config with your RabbitMQ details
 rabbitmq:
-  host: my-release-rabbitmq
+  host: mmseqs-rabbitmq
   port: 5672
   queueName: task_queue
   userName: user
-  password: 0A8Nrn1G1DCg7T8K
+  password: 0CTopmP8ppyZp9zi
