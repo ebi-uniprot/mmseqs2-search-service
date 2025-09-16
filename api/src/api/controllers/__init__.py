@@ -1,71 +1,50 @@
-from fastapi import APIRouter
-from fastapi.staticfiles import StaticFiles
-
-from api.models import FastaBlobModel
-
-router = APIRouter(tags=["status"])
-from httpx import Client
-from loguru import logger
-import pika
-
 from typing import TypedDict
+
+from fastapi import APIRouter, HTTPException
+from loguru import logger
+
+from api.handlers.broker import BlockingQueueConnection
+from api.handlers.db import MetaDataDb
+from api.models.db import MetadataDbGetRequest, MetaDataDbGetResponse, MetadataDbPostRequest, MetaDataDbPostResponse
+from api.models.fasta_input import FastaBlobModel
+from api.status import TaskStatus
+
 
 class StatusResponse(TypedDict):
     status: str
     uuid: str
 
 
-@router.post("/submit")
-async def submit(fasta_content: FastaBlobModel) -> dict:
-    logger.debug("Received fasta content of size: {}", len(fasta_content))
-    logger.debug("Fasta UUID: {}", fasta_content.uuid)
-    logger.debug("Message: {}", fasta_content.to_message())
-    publish_message("jobs", fasta_content.to_message()) 
+def router(db: MetaDataDb, queue: BlockingQueueConnection) -> APIRouter:
+    router = APIRouter(tags=["status"])
 
-    return {"status": "ok", "uuid": fasta_content.uuid}
+    @router.post("/submit", response_model=MetaDataDbPostResponse, status_code=200)
+    async def submit(content: FastaBlobModel) -> MetaDataDbPostResponse:
+        # When the model fails to validate FastaBlobModel the fastapi
+        # will automatically send the response 422 Unprocessable Entity.
+        logger.debug("New job: {}", content.job_id)
 
-def publish_message(queue_name: str, message: str, port: int = 5672):
-    """
-    Publishes a JSON message (string) to the given RabbitMQ queue.
+        msg = content.to_message()
+        logger.debug("Publishing msg to queue: {}", content.job_id)
+        with queue as q:
+            result = q.publish_message(msg)
+            match result:
+                case TaskStatus.FAILED:
+                    raise HTTPException(status_code=400, detail="Failed to upload task to the queue")
 
-    Args:
-        queue_name (str): The queue to publish to.
-        message (str): The message payload (already JSON string).
-        port (int, optional): RabbitMQ port, defaults to 5672.
-    """
-    logger.debug("Passing the message")
+        logger.info("Publishing to database")
 
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host="mmseq2-rabbit-rabbitmq", port=5672, credentials=pika.PlainCredentials("user", "x1U4EJNzgQ1F4Fsl"))
-    )
-    print("Connected!")
+        # Database handling
+        # Always return 200, even if the actual status of the job is FAILED
+        return await db.submit_job(MetadataDbPostRequest(job_id=content.job_id))
 
-    channel = connection.channel()
+    @router.get("/status/{job_id}", response_model=MetaDataDbGetResponse, status_code=200)
+    async def status(job_id: str) -> MetaDataDbGetResponse:
+        logger.info(f"Got GET request with {job_id}")
+        return await db.get_job(data=MetadataDbGetRequest(job_id=job_id))
 
-    # Ensure queue exists
-    channel.queue_declare(queue=queue_name, durable=True)
+    @router.get("/")
+    async def healthcheck():
+        return {"status": "ok"}
 
-    # Publish message
-    channel.basic_publish(
-        exchange="",
-        routing_key=queue_name,
-        body=message.encode("utf-8"),  # ensure bytes
-        properties=pika.BasicProperties(delivery_mode=2)  # persist message
-    )
-
-    logger.debug("Message Passes")
-
-    connection.close()
-    return True
-
-
-@router.get("/status/{uuid}")
-async def status(uuid: str) -> StatusResponse:
-    c = Client()
-    response = c.get(f"http://example.com/status/{uuid}")
-    return {"status": "ok", "uuid": uuid}
-
-
-@router.get("/")
-async def healthcheck():
-    return {"status": "ok"}
+    return router

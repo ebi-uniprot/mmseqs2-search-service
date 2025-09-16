@@ -2,7 +2,6 @@ import datetime
 from typing import Union, Annotated
 
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.concurrency import asynccontextmanager
 from sqlmodel import Field, Session, SQLModel, create_engine
 from pydantic import BaseModel
 
@@ -42,41 +41,45 @@ app = FastAPI()
 #     create_db_and_tables()
 #     yield
 
+
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
+
 
 class JobCreate(BaseModel):
     job_id: str
 
 
-@app.post("/job/")
-async def create_job(job: JobCreate, session: SessionDep):
+@app.post("/job/", response_model_exclude_none=True)
+async def create_job(job: JobCreate, session: SessionDep) -> Job:
     job_id = job.job_id
+    if session.get(Job, job_id):
+        raise HTTPException(status_code=400, detail="Job ID already exists")
     print("Creating job with ID:", job_id)
     job = Job(job_id=job_id, status="QUEUED", submitted_at=datetime.datetime.now())
     session.add(job)
     session.commit()
     session.refresh(job)
-    return {}
+    return job
 
 
-@app.patch("/job/{job_id}")
+@app.patch("/job/{job_id}", response_model_exclude_none=True)
 def update_job(job_id: str, job: Job, session: SessionDep) -> Job:
-    job_db = session.get(Job, job_id)
-    if not job_db:
+    stored_job = session.get(Job, job_id)
+    if not stored_job:
         raise HTTPException(status_code=404, detail="Job not found")
+    # TODO: enforce only change queued --> running|failed
+    # TODO: enforce only change running --> failed|finished
     job_data = job.model_dump(exclude_unset=True)
-    if job_data.get("status") == "FINISHED":
-        job_data["completed_at"] = datetime.datetime.now()
-    job_db.sqlmodel_update(job_data)
-    session.add(job_db)
+    stored_job.sqlmodel_update(job_data)
+    session.add(stored_job)
     session.commit()
-    session.refresh(job_db)
-    return {}
+    session.refresh(stored_job)
+    return stored_job
 
 
-@app.get("/job/{job_id}")
+@app.get("/job/{job_id}", response_model_exclude_none=True)
 def retrieve_job(job_id: str, session: SessionDep) -> Job:
     job = session.get(Job, job_id)
     if not job:
