@@ -1,14 +1,11 @@
-from pathlib import Path
-import subprocess
 import pika
 import json
 from queue_config import *
-import tempfile
-import shutil
 import logging
 import sys
-
+import requests
 import os
+from mmseqs_service import MMSeqsService
 
 # Rabbit related configuration with environment variable overrides
 RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", RABBITMQ_PORT))
@@ -24,77 +21,40 @@ logging.basicConfig(
     stream=sys.stdout,
 )
 
-DB_PATH = Path("/app/mmseqs_db/swissprot")
-WORKSPACE_DIR = Path("/workspace")
-WORKSPACE_DIR.mkdir(parents=True, exist_ok=True)
-RESULT_DIR = Path("/results")
+DB_DIR = "/app/mmseqs_db/swissprot"
+WORKSPACE_DIR = "/workspace"
+RESULT_DIR = "/results"
+DB_API_BASE_URL = "http://meta-database:8000"
 
 
-def mmseqs2_search(job):
-    """Run mmseqs easy-search on a FASTA sequence from the job."""
-    job_id = job.get("job_id")
-    if not job_id:
-        # How will these ValueErrors be handled in the consumer?
-        raise ValueError("Job must contain a job_id")
-    
-    logging.info(f"Processing job_id: {job_id}")
-    
-    fasta_content = job.get("fasta")
-    if not fasta_content:
-        raise ValueError("No FASTA content in job")
-    
-    logging.info(f"FASTA content length: {len(fasta_content)} characters")
-
-    with tempfile.TemporaryDirectory(dir=WORKSPACE_DIR) as tmpdirname:
-        temp_dir = Path(tmpdirname)
-        query_file = temp_dir / "input.fasta"
-
-        # write FASTA to temp file
-        with open(query_file, "w") as f:
-            f.write(fasta_content)
-
-        result_file = temp_dir / f"{job_id}.m8"
-
-        # This will be created and populated by mmseqs
-        mmseqs_tmp_dir = temp_dir / "tmp"
-
-        # build mmseqs easy-search command
-        cmd = [
-            "mmseqs",
-            "easy-search",
-            str(query_file),
-            str(DB_PATH),
-            str(result_file),
-            str(mmseqs_tmp_dir),
-        ]
-
-        try:
-            subprocess.run(cmd, check=True, capture_output=True)
-        except subprocess.CalledProcessError as e:
-            logging.error(f"mmseqs easy-search failed: {e.stderr.decode()}")
-            raise RuntimeError(f"mmseqs easy-search failed: {e.stderr.decode()}")
-        
-        # Move the result to results folder
-        final_result_file = RESULT_DIR / f"{job_id}.m8"
-        shutil.move(str(result_file), final_result_file)
-        logging.info(f"Result saved to {final_result_file}")
-
-        return {"status": "processed"}
+mmseqsService =  MMSeqsService(DB_DIR, WORKSPACE_DIR, RESULT_DIR)
 
 
-def save_result(job_id, result):
-    # Replace this with your actual DB saving logic
+def update_job_status(job_id, job_status):
+    """Update job status in the database via API call."""
     pass
+    # api_url = f"{DB_API_BASE_URL}/{job_id}"
+    # payload = {"status": job_status}
+    # try:
+    #     response = requests.patch(api_url, json=payload)
+    #     response.raise_for_status() # raises error if status_code >= 400
+    #     logging.info(f"Updated job {job_id} status to {job_status}")
+    # except requests.RequestException as e:
+    #     logging.error(f"Failed to update job status for {job_id}: {e}")
+    #     raise Exception(f"Failed to update job status for {job_id}: {e}")
 
 
 def handle_message(ch, method, properties, body):
     """Callback for each RabbitMQ message."""
     try:
         job = json.loads(body)
-        # step 1 search in mmseq2
-        result = mmseqs2_search(job)
-        # call the db api to save the result with status finished TODO
-        save_result(job["job_id"], result)  # Placeholder actual implementation
+        # step 1 set the status to Running
+        logging.info(f"Received job: {job}")
+        update_job_status(job["job_id"], "Running")
+        # step 2 search in mmseq2
+        mmseqsService.mmseqs2_search(job)
+        # step 3 call the db api to save the result with status finished
+        update_job_status(job["job_id"], "Finished")
         ch.basic_ack(delivery_tag=method.delivery_tag)
     except Exception as e:
         logging.error("Failed to process job: %s", e, exc_info=True)
