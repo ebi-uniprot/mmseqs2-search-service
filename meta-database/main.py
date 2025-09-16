@@ -9,7 +9,7 @@ from pydantic import BaseModel
 class Job(SQLModel, table=True):
     job_id: str = Field(primary_key=True, index=True)
     status: str
-    submitted_at: str
+    submitted_at: Union[str, None] = None
     completed_at: Union[str, None] = None
     # data: Union[object, None] = Field(default=None)
 
@@ -71,8 +71,11 @@ def update_job(job_id: str, job: Job, session: SessionDep) -> Job:
         raise HTTPException(status_code=404, detail="Job not found")
     # TODO: enforce only change queued --> running|failed
     # TODO: enforce only change running --> failed|finished
+
     job_data = job.model_dump(exclude_unset=True)
     stored_job.sqlmodel_update(job_data)
+    if stored_job.status == "FINISHED":
+        stored_job.submitted_at = None
     session.add(stored_job)
     session.commit()
     session.refresh(stored_job)

@@ -11,6 +11,9 @@ from pathlib import Path
 import json
 
 mock_dir = Path("../mocks")
+with open(mock_dir / "worker_send_job_finished_to_db.json") as f:
+    worker_send_job_finished_to_db = json.load(f)
+
 with open(mock_dir / "worker_send_job_running_to_db.json") as f:
     worker_send_job_running_to_db = json.load(f)
 
@@ -98,4 +101,14 @@ def test_create_job(client):
     assert response.json() == db_get_failed_job
 
     # worker sends finished job
+    response = client.patch(
+        f"/job/{worker_send_job_finished_to_db['job_id']}",
+        json=worker_send_job_finished_to_db,
+    )
+    assert response.status_code == 200
+    assert response.json() == worker_send_job_finished_to_db
+
     # check finished job in db
+    response = client.get(f"/job/{worker_send_job_finished_to_db['job_id']}")
+    assert response.status_code == 200
+    assert response.json() == worker_send_job_finished_to_db
