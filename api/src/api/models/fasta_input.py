@@ -6,7 +6,7 @@ from functools import cached_property
 from io import StringIO
 
 from Bio import SeqIO
-from pydantic import BaseModel, ValidationError, field_validator
+from pydantic import BaseModel, field_validator
 
 
 class FastaBlobModel(BaseModel):
@@ -17,15 +17,25 @@ class FastaBlobModel(BaseModel):
     @field_validator("fasta", mode="after")
     @classmethod
     def validate_fasta_string(cls, fasta_str: str) -> str:
-        """Validate the fasta string by attempting to parse it."""
-        try:
-            handle = StringIO(fasta_str)
-            records = list(SeqIO.parse(handle, "fasta"))
-        except Exception as e:
-            raise ValidationError(f"Error parsing FASTA content: {e}")
+        """Validate the fasta string by attempting to parse it and checking sequence content."""
+        handle = StringIO(fasta_str)
+        records = list(SeqIO.parse(handle, "fasta-pearson"))
         if not records:
-            raise ValidationError("No valid FASTA records found.")
+            raise ValueError("No valid FASTA records found.")
+
+        for record in records:
+            seq = str(record.seq).upper()
+            if not seq:
+                raise ValueError("Found empty fasta sequence.")
+            invalid = set(seq) - cls.allowed_characters()
+            if invalid:
+                raise ValueError("Found invalid fasta sequence.")
         return fasta_str
+
+    @classmethod
+    def allowed_characters(cls) -> set:
+        """Return the set of allowed amino acid characters."""
+        return set("ABCDEFGHIKLMNOPQRSTUVWXYZ*-X")
 
     @cached_property
     def job_id(self) -> str:
@@ -33,10 +43,6 @@ class FastaBlobModel(BaseModel):
         h = hashlib.md5(self.fasta.encode("utf-8"))
         return h.hexdigest()
 
-    def __len__(self) -> int:
-        """Get the number of lines in the fasta content."""
-        return self.fasta.count("\n")
-
     def to_message(self) -> str:
         """Convert to the rabbit mq message."""
-        return json.dumps({"job_id": self.job_id, "fasta_content": self.fasta})
+        return json.dumps({"job_id": self.job_id, "fasta": self.fasta})
