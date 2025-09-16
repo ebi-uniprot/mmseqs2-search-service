@@ -69,8 +69,6 @@ def update_job(job_id: str, job: Job, session: SessionDep) -> Job:
     if not stored_job:
         raise HTTPException(status_code=404, detail="Job not found")
     job_data = job.model_dump(exclude_unset=True)
-    if job_data.get("status") == "FINISHED":
-        job_data["completed_at"] = datetime.datetime.now()
     stored_job.sqlmodel_update(job_data)
     session.add(stored_job)
     session.commit()
