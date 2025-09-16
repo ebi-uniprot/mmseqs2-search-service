@@ -23,6 +23,7 @@ engine = create_engine(sqlite_url, connect_args=connect_args)
 
 
 def create_db_and_tables():
+    print("Creating database and tables...")
     SQLModel.metadata.create_all(engine)
 
 
@@ -36,11 +37,14 @@ SessionDep = Annotated[Session, Depends(get_session)]
 app = FastAPI()
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    create_db_and_tables()
-    yield
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     create_db_and_tables()
+#     yield
 
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
 
 class JobCreate(BaseModel):
     job_id: str

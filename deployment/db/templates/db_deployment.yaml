@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mmseqs2-db
+  labels:
+    app: mmseqs2-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mmseqs2-db
+  template:
+    metadata:
+      labels:
+        app: mmseqs2-db
+    spec:
+      containers:
+      - name: metadb
+        image: db:0.1.0
+        imagePullPolicy: IfNotPresent
+       
