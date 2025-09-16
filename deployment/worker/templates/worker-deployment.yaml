@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "worker.fullname" . }}
+  labels:
+    {{- include "worker.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "worker.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "worker.selectorLabels" . | nindent 8 }}
+    spec:
+      initContainers:
+        - name:  mmseqs-init
+          image: worker-consumer:dev   # same image as main app
+          command: ["sh", "-c"]
+          args:
+            - cd /app/mmseqs_db && mmseqs databases UniProtKB/Swiss-Prot swissprot tmp
+          volumeMounts:
+            - name: mmseqs-volume
+              mountPath: /app/mmseqs_db
+      containers:
+        - name: {{ .Chart.Name }}
+          image: worker-consumer:dev
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RABBITMQ_HOST
+              value: {{ .Values.rabbitmq.host | quote }}
+            - name: RABBITMQ_PORT
+              value: {{ .Values.rabbitmq.port | quote }}
+            - name: QUEUE_NAME
+              value: {{ .Values.rabbitmq.queueName | quote }}
+            - name: USER_NAME
+              value: {{ .Values.rabbitmq.userName | quote }}
+            - name: PASSWORD
+              value: {{ .Values.rabbitmq.password | quote }}
+          resources:
+            limits:
+              memory: "4Gi"
+              cpu: "1"
+            requests:
+              memory: "2Gi"
+              cpu: "500m"
+          volumeMounts:
+            - name: mmseqs-volume
+              mountPath: /app/mmseqs_db
+      volumes:
+        - name: mmseqs-volume
+          emptyDir: {}
+          
