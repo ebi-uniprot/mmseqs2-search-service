@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import SQLModel, Session, create_engine
 from sqlmodel.pool import StaticPool
+from freezegun import freeze_time
 
 # Import the FastAPI app and dependency from the module where the code is defined
 from main import app, get_session
@@ -16,6 +17,11 @@ with open(mock_dir / "worker_send_job_running_to_db.json") as f:
 with open(mock_dir / "db_get_queued_job.json") as f:
     db_get_queued_job = json.load(f)
 
+with open(mock_dir / "db_get_running_job.json") as f:
+    db_get_running_job = json.load(f)
+
+with open(mock_dir / "api_send_job_to_db.json") as f:
+    api_send_job_to_db = json.load(f)
 
 @pytest.fixture
 def client():
@@ -48,14 +54,26 @@ def test_get_job_when_job_does_not_exist(client):
     response = client.get("/job/123")
     assert response.status_code == 404
 
-
+@freeze_time(db_get_queued_job['submitted_at'])
 def test_create_job(client):
     response = client.post(
-        "/job/", json={"job_id": worker_send_job_running_to_db["job_id"]}
+        "/job/", json={"job_id": api_send_job_to_db["job_id"]}
     )
     assert response.status_code == 200
     assert response.json() == {}  # Endpoint returns an empty dict on success
 
+    # checking if job is queued
+    response = client.get(
+        f"/job/{db_get_queued_job['job_id']}" 
+    )
+    assert response.status_code == 200
+    assert dict(response.json()) == db_get_queued_job
 
-def test_get_job_when_job_exists(client):
-    pass
+    # checking if queued job is now running 
+
+    # checking if job is running
+    # response = client.get(
+    #     f"/job/{db_get_running_job['job_id']}" 
+    # )
+    # assert response.status_code == 200
+    # assert response.json() == json.dumps(db_get_running_job)

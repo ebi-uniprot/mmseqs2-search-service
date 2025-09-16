@@ -76,7 +76,7 @@ def update_job(job_id: str, job: Job, session: SessionDep) -> Job:
     return {}
 
 
-@app.get("/job/{job_id}")
+@app.get("/job/{job_id}", response_model=Job, response_model_exclude_none=True)
 def retrieve_job(job_id: str, session: SessionDep) -> Job:
     job = session.get(Job, job_id)
     if not job:
