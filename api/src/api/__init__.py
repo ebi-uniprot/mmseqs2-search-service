@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import httpx
 import typer
@@ -53,6 +53,7 @@ class App:
         self,
         fasta_output_path: str,
         db_endpoint: str,
+        db_port: int,
         queue_name: str,
         queue_username: str,
         queue_passwd: str,
@@ -66,7 +67,7 @@ class App:
         self.app.mount("/results", CustomHeaderStaticFiles(directory=self.fasta_output_path), name="static")
 
         # db
-        self.db_endpoint = db_endpoint
+        self.db_endpoint = f"{db_endpoint.removesuffix(':')}:{db_port}"
         self.db = MetaDataDb(endpoint=self.db_endpoint, client=self.httpx_client)
 
         # queue
@@ -118,33 +119,24 @@ class App:
 
 @cli.command()
 def run(
-    app_port: int = 8084,
-    app_host: str = "127.0.0.1",
-    fasta_output_path="/static",
-    db_endpoint: str = "",
-    queue_name: str = "",
-    queue_username: str = "",
-    queue_passwd: str = "",
-    queue_port: int = 5672,
-    queue_host: str = "127.0.0.1",
+    app_port: Annotated[int, typer.Option(help="Port to run the application on", envvar="API_PORT")] = 8084,
+    app_host: Annotated[str, typer.Option(help="Host to run the application on", envvar="API_HOST")] = "127.0.0.1",
+    fasta_output_path: Annotated[
+        str, typer.Option(help="Path to the FASTA output directory", envvar="API_FASTA_OUTPUT_PATH")
+    ] = "/static",
+    db_endpoint: Annotated[str, typer.Option(help="Database endpoint URL", envvar="DB_ENDPOINT")] = "127.0.0.1",
+    db_port: Annotated[int, typer.Option(help="Database port", envvar="DB_PORT")] = 8085,
+    queue_name: Annotated[str, typer.Option(help="Name of the message queue", envvar="QUEUE_NAME")] = "",
+    queue_username: Annotated[str, typer.Option(help="Username for the message queue", envvar="QUEUE_USERNAME")] = "",
+    queue_passwd: Annotated[str, typer.Option(help="Password for the message queue", envvar="QUEUE_PASSWD")] = "",
+    queue_port: Annotated[int, typer.Option(help="Port for the message queue", envvar="QUEUE_PORT")] = 5672,
+    queue_host: Annotated[str, typer.Option(help="Host for the message queue", envvar="QUEUE_HOST")] = "127.0.0.1",
 ):
-    """CLI command to run the API application.
-
-    Args:
-        app_port (int): The port to run the application on. Default is 8084.
-        app_host (str): The host to run the application on. Default is "127.0.0.1".
-        fasta_output_path (str): The path to the FASTA output directory. Default is "/static".
-        db_endpoint (str): The database endpoint URL. Default is "".
-        queue_name (str): The name of the message queue. Default is "".
-        queue_username (str): The username for the message queue. Default is "".
-        queue_passwd (str): The password for the message queue. Default is "".
-        queue_port (int): The port for the message queue. Default is 5672.
-        queue_host (str): The host for the message queue. Default is "127.0.0.1".
-
-    """
+    """CLI command to run the API application."""
     app = App(
         fasta_output_path=fasta_output_path,
         db_endpoint=db_endpoint,
+        db_port=db_port,
         queue_name=queue_name,
         queue_username=queue_username,
         queue_passwd=queue_passwd,

@@ -34,7 +34,8 @@ def client(static_files: Path) -> TestClient:
     queue_mock.publish_message = MagicMock()
     app = App(
         fasta_output_path=str(static_files),
-        db_endpoint="sqlite:///:memory:",
+        db_endpoint="localhost",
+        db_port=8085,
         queue_name="test-queue",
         queue_username="user",
         queue_passwd="pass",  # noqa: S106

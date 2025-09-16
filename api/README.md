@@ -68,17 +68,22 @@ uv run api
 ```
 
 api will start the server on port 8084 by default. You can change the following options to the api command line:
-| Option | Type | Default |
-|-------------------------|----------|-----------------|
-| --app-port | INTEGER | 8084 |
-| --app-host | TEXT | 127.0.0.1 |
-| --fasta-output-path | TEXT | /static |
-| --db-endpoint | TEXT | |
-| --queue-name | TEXT | |
-| --queue-username | TEXT | |
-| --queue-passwd | TEXT | |
-| --queue-port | INTEGER | 5672 |
-| --queue-host | TEXT | 127.0.0.1 |
+
+| Option               | Type    | Description                                                                      | Env Var               | Default   |
+| -------------------- | ------- | -------------------------------------------------------------------------------- | --------------------- | --------- |
+| --app-port           | INTEGER | Port to run the application on                                                   | API_PORT              | 8084      |
+| --app-host           | TEXT    | Host to run the application on                                                   | API_HOST              | 127.0.0.1 |
+| --fasta-output-path  | TEXT    | Path to the FASTA output directory                                               | API_FASTA_OUTPUT_PATH | /static   |
+| --db-endpoint        | TEXT    | Database endpoint URL                                                            | DB_ENDPOINT           | 127.0.0.1 |
+| --db-port            | INTEGER | Database port                                                                    | DB_PORT               | 8085      |
+| --queue-name         | TEXT    | Name of the message queue                                                        | QUEUE_NAME            |           |
+| --queue-username     | TEXT    | Username for the message queue                                                   | QUEUE_USERNAME        |           |
+| --queue-passwd       | TEXT    | Password for the message queue                                                   | QUEUE_PASSWD          |           |
+| --queue-port         | INTEGER | Port for the message queue                                                       | QUEUE_PORT            | 5672      |
+| --queue-host         | TEXT    | Host for the message queue                                                       | QUEUE_HOST            | 127.0.0.1 |
+| --install-completion |         | Install completion for the current shell.                                        |                       |           |
+| --show-completion    |         | Show completion for the current shell, to copy it or customize the installation. |                       |           |
+| --help               |         | Show this message and exit.                                                      |                       |           |
 
 ## Design
 
