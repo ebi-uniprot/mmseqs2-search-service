@@ -7,13 +7,10 @@
 #     -e GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json  \
 #     gentroutuls -s gwas_catalog_release
 # By default the image uses the `config.yaml` file provided in the repository.
-FROM rust:slim-trixie AS rust-builder
 FROM python:3.13.7-slim-trixie
 
 # Copy Rustc and Cargo from the rust-builder stage
 # These are needed to install polars without compiling rust from source
-COPY --from=rust-builder /usr/local/cargo/bin/rustc /usr/local/bin/rustc
-COPY --from=rust-builder /usr/local/cargo/bin/cargo /usr/local/bin/cargo
 
 # Copy Python source
 COPY src /app/src
