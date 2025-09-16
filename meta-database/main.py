@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-@app.post("/")
+@app.post("/job/")
 def create_job(job_id: str, session: SessionDep):
     job = Job(job_id=job_id, status="created", submitted_at=datetime.datetime.now())
     session.add(job)
@@ -43,7 +43,7 @@ def create_job(job_id: str, session: SessionDep):
     session.refresh(job)
     return {}
 
-@app.patch("/{job_id}")
+@app.patch("/job/{job_id}")
 def update_job(job_id: str, job: Job, session: SessionDep) -> Job:
     job_db = session.get(Job, job_id)
     if not job_db:
@@ -55,7 +55,7 @@ def update_job(job_id: str, job: Job, session: SessionDep) -> Job:
     session.refresh(job_db)
     return job_db
 
-@app.get("/{job_id}")
+@app.get("/job/{job_id}")
 def retrieve_job(job_id: str, session: SessionDep) -> Job:
     job = session.get(Job, job_id)
     if not job:
