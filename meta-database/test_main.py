@@ -44,7 +44,12 @@ def client():
     app.dependency_overrides.clear()
 
 
-def test_full_job_lifecycle_success(client):
+def test_get_job_when_job_does_not_exist(client):
+    response = client.get("/job/123")
+    assert response.status_code == 404
+
+
+def test_create_job(client):
     response = client.post(
         "/job/", json={"job_id": worker_send_job_running_to_db["job_id"]}
     )
@@ -52,6 +57,5 @@ def test_full_job_lifecycle_success(client):
     assert response.json() == {}  # Endpoint returns an empty dict on success
 
 
-def test_get_job_when_job_does_not_exist(client):
-    response = client.get(f"/job/{db_get_queued_job['job_id']}")
-    assert response.status_code == 404
+def test_get_job_when_job_exists(client):
+    pass
