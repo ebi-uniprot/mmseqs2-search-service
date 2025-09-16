@@ -143,4 +143,14 @@ def run(
         queue_port=queue_port,
         queue_host=queue_host,
     )
+    logger.info("Starting API with the following configuration:")
+    logger.info(f"app_host: {app_host}")
+    logger.info(f"app_port: {app_port}")
+    logger.info(f"fasta_output_path: {fasta_output_path}")
+    logger.info(f"db_endpoint: {db_endpoint}")
+    logger.info(f"db_port: {db_port}")
+    logger.info(f"queue_name: {queue_name}")
+    logger.info(f"queue_username: {queue_username}")
+    logger.info(f"queue_port: {queue_port}")
+    logger.info(f"queue_host: {queue_host}")
     app.run(port=app_port, host=app_host)
