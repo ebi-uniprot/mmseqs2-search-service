@@ -8,6 +8,12 @@ from httpx import Client
 from loguru import logger
 import pika
 
+from typing import TypedDict
+
+class StatusResponse(TypedDict):
+    status: str
+    uuid: str
+
 
 @router.post("/submit")
 async def submit(fasta_content: FastaBlobModel) -> dict:
@@ -54,7 +60,7 @@ def publish_message(queue_name: str, message: str, port: int = 5672):
 
 
 @router.get("/status/{uuid}")
-async def status(uuid: str) -> dict:
+async def status(uuid: str) -> StatusResponse:
     c = Client()
     response = c.get(f"http://example.com/status/{uuid}")
     return {"status": "ok", "uuid": uuid}
