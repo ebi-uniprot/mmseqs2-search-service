@@ -2,7 +2,6 @@ import datetime
 from typing import Union, Annotated
 
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.concurrency import asynccontextmanager
 from sqlmodel import Field, Session, SQLModel, create_engine
 from pydantic import BaseModel
 
@@ -42,9 +41,11 @@ app = FastAPI()
 #     create_db_and_tables()
 #     yield
 
+
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
+
 
 class JobCreate(BaseModel):
     job_id: str
@@ -63,7 +64,7 @@ async def create_job(job: JobCreate, session: SessionDep):
     return job
 
 
-@app.patch("/job/{job_id}", response_model=Job, response_model_exclude_none=True)
+@app.patch("/job/{job_id}", response_model_exclude_none=True)
 def update_job(job_id: str, job: Job, session: SessionDep) -> Job:
     stored_job = session.get(Job, job_id)
     if not stored_job:
@@ -76,7 +77,7 @@ def update_job(job_id: str, job: Job, session: SessionDep) -> Job:
     return stored_job
 
 
-@app.get("/job/{job_id}", response_model=Job, response_model_exclude_none=True)
+@app.get("/job/{job_id}", response_model_exclude_none=True)
 def retrieve_job(job_id: str, session: SessionDep) -> Job:
     job = session.get(Job, job_id)
     if not job:
