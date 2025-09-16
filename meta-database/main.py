@@ -63,17 +63,17 @@ async def create_job(job: JobCreate, session: SessionDep):
 
 @app.patch("/job/{job_id}", response_model=Job, response_model_exclude_none=True)
 def update_job(job_id: str, job: Job, session: SessionDep) -> Job:
-    job = session.get(Job, job_id)
-    if not job:
+    stored_job = session.get(Job, job_id)
+    if not stored_job:
         raise HTTPException(status_code=404, detail="Job not found")
     job_data = job.model_dump(exclude_unset=True)
     if job_data.get("status") == "FINISHED":
         job_data["completed_at"] = datetime.datetime.now()
-    job.sqlmodel_update(job_data)
-    session.add(job)
+    stored_job.sqlmodel_update(job_data)
+    session.add(stored_job)
     session.commit()
-    session.refresh(job)
-    return job
+    session.refresh(stored_job)
+    return stored_job
 
 
 @app.get("/job/{job_id}", response_model=Job, response_model_exclude_none=True)
