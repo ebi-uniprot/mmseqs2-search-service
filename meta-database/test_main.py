@@ -60,7 +60,7 @@ def test_get_job_when_job_does_not_exist(client):
 def test_create_job(client):
     response = client.post("/job/", json={"job_id": api_send_job_to_db["job_id"]})
     assert response.status_code == 200
-    assert response.json() == {}  # Endpoint returns an empty dict on success
+    assert response.json() == db_get_queued_job
 
     # checking if job is queued
     response = client.get(f"/job/{db_get_queued_job['job_id']}")

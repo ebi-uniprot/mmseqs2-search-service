@@ -51,8 +51,8 @@ class JobCreate(BaseModel):
     job_id: str
 
 
-@app.post("/job/")
-async def create_job(job: JobCreate, session: SessionDep):
+@app.post("/job/", response_model_exclude_none=True)
+async def create_job(job: JobCreate, session: SessionDep) -> Job:
     job_id = job.job_id
     if session.get(Job, job_id):
         raise HTTPException(status_code=400, detail="Job ID already exists")
