@@ -15,7 +15,6 @@ spec:
         app: mmseqs2-db
     spec:
       containers:
-      - name: metadb
-        image: metadb:dev
-        imagePullPolicy: IfNotPresent
-       
+        - name: metadb
+          image: metadb:dev
+          imagePullPolicy: IfNotPresent

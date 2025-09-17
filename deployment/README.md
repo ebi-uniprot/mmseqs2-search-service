@@ -1,9 +1,14 @@
 ### Deploy RabbitMQ using helm command
 
-``` 
-helm install mmseqs oci://registry-1.docker.io/bitnamicharts/rabbitmq
 ```
+helm install mmseqs2-queue oci://registry-1.docker.io/bitnamicharts/rabbitmq \
+  --set auth.username=user \
+  --set auth.password=mypassword123
+
+```
+
 ### Get RabbitMQ password
+
 ```
 kubectl get secret --namespace default mmseqs-rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d
 ```
@@ -13,18 +18,21 @@ kubectl get secret --namespace default mmseqs-rabbitmq -o jsonpath="{.data.rabbi
 ## Deploy Worker Steps
 
 #### Build worker docker image
+
 ```
 cd worker
 docker build -t worker-consumer:dev .
 ```
 
 #### Load docker image in minkube
+
 ```
 minikube profile list
 minikube image load worker-consumer:dev --profile=<PROFILE>
 ```
 
 #### Delete worker docker image from minikube if needed
+
 ```
 helm uninstall worker-dev
 minikube ssh --profile=minikube-local
@@ -40,11 +48,15 @@ helm install mmseqs-worker-dev worker/
 ```
 
 ### Publish Message to task_queue to test
+
 #### Port Forwarding
+
 ```
 kubectl port-forward --namespace default svc/mmseqs-rabbitmq 15672:15672
 ```
+
 #### Open RabbitMQ Management Console in browser and publish message
+
 ```
 http://127.0.0.1:15672/#/
 go to --> http://127.0.0.1:15672/#/queues/%2F/task_queue
@@ -57,10 +69,12 @@ Payload: {
 ```
 
 #### View result inside worker pod once completed
+
 ```
 kubectl exec -it worker-dev-599449b785-hllc8 -- bash
 cd /results/
 ```
+
 ### build api docker image (NB - Not Ready Yet)
 
 ```
@@ -69,7 +83,8 @@ docker build -t rest-api:dev .
 ```
 
 #### build db docker image(NB - Not Ready Yet)
-``` 
+
+```
 cd db
 docker build -t db:dev .
 ```
