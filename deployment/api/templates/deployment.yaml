@@ -36,7 +36,7 @@ spec:
             "--app-port", "8080",
             "--app-host", "0.0.0.0",
             "--fasta-output-path", "/static",
-            "--db-endpoint", "http://my-service",
+            "--db-endpoint", "http://mmseqs2-metadb",
             "--db-port", "8080",
             "--queue-name", "task_queue",
             "--queue-username", "user",

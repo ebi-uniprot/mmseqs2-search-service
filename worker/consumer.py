@@ -13,7 +13,7 @@ RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", RABBITMQ_PORT))
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", RABBITMQ_HOST)
 QUEUE_NAME = os.getenv("QUEUE_NAME", QUEUE_NAME)
 USER_NAME = os.getenv("USER_NAME", USER_NAME)
-PASSWORD = os.getenv("PASSWORD", PASSWORD)  
+PASSWORD = os.getenv("PASSWORD", PASSWORD)
 
 # Configure logging
 logging.basicConfig(
@@ -25,10 +25,10 @@ logging.basicConfig(
 DB_DIR = "/app/mmseqs_db/swissprot"
 WORKSPACE_DIR = "/workspace"
 RESULT_DIR = "/results"
-DB_API_BASE_URL = os.getenv("DB_API_BASE_URL","http://meta-database:8000")
+DB_API_BASE_URL = os.getenv("DB_API_BASE_URL", "http://meta-database:8000")
 
 
-mmseqs_service =  MMSeqsService(DB_DIR, WORKSPACE_DIR, RESULT_DIR)
+mmseqs_service = MMSeqsService(DB_DIR, WORKSPACE_DIR, RESULT_DIR)
 job_status_updater = JobStatusUpdater(DB_API_BASE_URL)
 
 
@@ -44,7 +44,9 @@ def handle_message(ch, method, properties, body):
         # step 3 call the db api to save the result with status finished
         now = datetime.now()
         time_str = now.strftime("%Y-%m-%d %H:%M:%S.%f")
-        job_status_updater.update_job_status(job["job_id"], "FINISHED", timestamp=time_str)
+        job_status_updater.update_job_status(
+            job["job_id"], "FINISHED", timestamp=time_str
+        )
         ch.basic_ack(delivery_tag=method.delivery_tag)
     except Exception as e:
         logging.error("Failed to process job: %s", e, exc_info=True)
@@ -53,9 +55,18 @@ def handle_message(ch, method, properties, body):
 
 def start_consumer():
     """Start RabbitMQ consumer and listen for messages."""
+
+    logging.info(f"RABBITMQ_PORT: {RABBITMQ_PORT}")
+    logging.info(f"RABBITMQ_HOST: {RABBITMQ_HOST}")
+    logging.info(f"QUEUE_NAME: {QUEUE_NAME}")
+    logging.info(f"USER_NAME: {USER_NAME}")
+    logging.info(f"PASSWORD: {PASSWORD}")
+
     credentials = pika.PlainCredentials(USER_NAME, PASSWORD)
     connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host=RABBITMQ_HOST, port=RABBITMQ_PORT, credentials=credentials)
+        pika.ConnectionParameters(
+            host=RABBITMQ_HOST, port=RABBITMQ_PORT, credentials=credentials
+        )
     )
     channel = connection.channel()
     # Ensure queue exists
