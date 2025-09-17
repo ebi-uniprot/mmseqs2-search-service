@@ -9,13 +9,8 @@ cd deployment
 ./deploy_all.sh
 ```
 
-Once deployed, the script will return a service URL. To access the interactive Swagger documentation, append `/docs` to the returned URL.
+Once deployed, the script will return a Swagger Docs URL. Keep it running. Do not in the terminal. 
 
-Example:
-
-```
-http://<service-url>/docs
-```
 
 ⚠️ **Important:** Wait for the **worker chart** to be fully deployed before submitting a new job.
 * **Note:** The worker takes a couple of minutes during the **first run** to initialize the data.
