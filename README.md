@@ -1,6 +1,6 @@
 # Deploying all
 
-Requires minikube and docker.
+Requires minikube, docker, kubectl and helm.
 
 ```bash
 cd deployment
