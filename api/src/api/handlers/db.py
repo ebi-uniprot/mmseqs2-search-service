@@ -41,7 +41,9 @@ class MetaDataDb:
             HTTPException: If there is an unexpected error while posting the job (500).
 
         """
-        resp = await self.client.post(url=self.post_job_url, data=data.model_dump())
+        logger.info(f"Data model dump {data.model_dump()}")
+        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        resp = await self.client.post(url=self.post_job_url, json=data.model_dump(), headers=headers)
         match resp.status_code:
             case 200:
                 return MetaDataDbPostResponse(job_id=data.job_id, status=TaskStatus.QUEUED)

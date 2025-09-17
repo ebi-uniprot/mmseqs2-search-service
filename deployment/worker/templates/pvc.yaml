@@ -4,7 +4,7 @@ metadata:
   name: mmseqs-writable-pvc
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 4Gi

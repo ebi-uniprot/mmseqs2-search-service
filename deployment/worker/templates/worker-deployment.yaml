@@ -57,5 +57,5 @@ spec:
           emptyDir: {}
         - name: mmseqs-results-volume
           persistentVolumeClaim:
-          claimName: mmseqs-writable-pvc
+            claimName: mmseqs-writable-pvc
           
