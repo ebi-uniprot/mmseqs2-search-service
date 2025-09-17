@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 import datetime
 from typing import Union, Annotated
 
@@ -33,18 +34,14 @@ def get_session():
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
-app = FastAPI()
 
-
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     create_db_and_tables()
-#     yield
-
-
-@app.on_event("startup")
-def on_startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     create_db_and_tables()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 class JobCreate(BaseModel):
