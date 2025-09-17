@@ -40,9 +40,9 @@ spec:
             "--db-port", "8080",
             "--queue-name", "task_queue",
             "--queue-username", "user",
-            "--queue-passwd", "0CTopmP8ppyZp9zi",
+            "--queue-passwd", "mypassword123",
             "--queue-port", "5672",
-            "--queue-host", "mmseqs-rabbitmq"
+            "--queue-host", "mmseqs2-queue-rabbitmq"
           ]
           ports:
             - name: http
