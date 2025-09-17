@@ -4,7 +4,6 @@
 helm install mmseqs2-queue oci://registry-1.docker.io/bitnamicharts/rabbitmq \
   --set auth.username=user \
   --set auth.password=mypassword123
-
 ```
 
 ### Get RabbitMQ password

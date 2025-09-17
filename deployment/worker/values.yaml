@@ -12,5 +12,5 @@ rabbitmq:
   password: 0CTopmP8ppyZp9zi
 
 metadb:
-  host: my-service
+  host: mmseqs2-metadb
   port: "8080"
