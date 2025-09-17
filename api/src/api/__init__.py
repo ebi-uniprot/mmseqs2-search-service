@@ -67,8 +67,13 @@ class App:
         self.app.mount("/results", CustomHeaderStaticFiles(directory=self.fasta_output_path), name="static")
 
         # db
-        self.db_endpoint = f"{db_endpoint.removesuffix(':')}:{db_port}"
-        self.db = MetaDataDb(endpoint=self.db_endpoint, client=self.httpx_client)
+        self.db_port = db_port
+        self.db_endpoint = db_endpoint
+        logger.info("Building db client for endpoint: {}:{}", db_endpoint, db_port)
+        self.db = MetaDataDb(
+            endpoint=f"{db_endpoint.removesuffix(':')}:{db_port}",
+            client=self.httpx_client,
+        )
 
         # queue
         self.queue_name = queue_name
@@ -76,6 +81,7 @@ class App:
         self.queue_passwd = queue_passwd
         self.queue_port = queue_port
         self.queue_host = queue_host
+        logger.info("Building queue client for host: {}:{}", queue_host, queue_port)
         self.queue = BlockingQueueConnection(
             queue_name=self.queue_name,
             username=self.queue_username,
@@ -113,6 +119,16 @@ class App:
             port (int): The port to run the application on.
             host (str): The host to run the application on.
         """
+        logger.info("Starting API w ith the following configuration:")
+        logger.info(f"app_host: {host}")
+        logger.info(f"app_port: {port}")
+        logger.info(f"fasta_output_path: {self.fasta_output_path}")
+        logger.info(f"db_endpoint: {self.db_endpoint}")
+        logger.info(f"db_port: {self.db_port}")
+        logger.info(f"queue_name: {self.queue_name}")
+        logger.info(f"queue_username: {self.queue_username}")
+        logger.info(f"queue_port: {self.queue_port}")
+        logger.info(f"queue_host: {self.queue_host}")
         logger.info("Starting API at http://{}:{}", host, port)
         uvicorn.run(self.app, host=host, port=port)
 
@@ -143,14 +159,5 @@ def run(
         queue_port=queue_port,
         queue_host=queue_host,
     )
-    logger.info("Starting API with the following configuration:")
-    logger.info(f"app_host: {app_host}")
-    logger.info(f"app_port: {app_port}")
-    logger.info(f"fasta_output_path: {fasta_output_path}")
-    logger.info(f"db_endpoint: {db_endpoint}")
-    logger.info(f"db_port: {db_port}")
-    logger.info(f"queue_name: {queue_name}")
-    logger.info(f"queue_username: {queue_username}")
-    logger.info(f"queue_port: {queue_port}")
-    logger.info(f"queue_host: {queue_host}")
+
     app.run(port=app_port, host=app_host)
