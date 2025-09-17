@@ -30,7 +30,7 @@ interrogate_badge.svg
 data
 
 
-# otter
+# other
 work/
-
 .vscode/
+.ipynb_checkpoints/
