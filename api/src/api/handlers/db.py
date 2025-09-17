@@ -21,7 +21,7 @@ class MetaDataDb:
             client (AsyncClient): The HTTPX async client to use for requests.
         """
         self.client = client
-        self.post_job_url = urljoin(endpoint, "job")
+        self.post_job_url = urljoin(endpoint, "job/")
         self.get_job_status_url = urljoin(endpoint, "job")
 
     async def post_job(self, data: MetadataDbPostRequest) -> MetaDataDbPostResponse:
@@ -62,8 +62,8 @@ class MetaDataDb:
             Response: httpx response object
         """
         logger.info(f"Fetching job {data.job_id} from database.")
-        logger.info(f"GET {self.get_job_status_url}/{data.job_id}")
-        job_url = urljoin(self.get_job_status_url, data.job_id)
+        job_url = f"{self.get_job_status_url}/{data.job_id}"
+        logger.info(f"Fetching job {job_url} from database.")
         return await self.client.get(url=job_url)
 
     async def get_job(self, data: MetadataDbGetRequest) -> MetaDataDbGetResponse:
