@@ -1,6 +1,9 @@
 """Routers for the API endpoints."""
 
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 from loguru import logger
 
 from api.handlers.broker import BlockingQueueConnection
@@ -9,7 +12,7 @@ from api.models.db import MetadataDbGetRequest, MetaDataDbGetResponse, MetadataD
 from api.models.fasta_input import FastaBlobModel
 
 
-def router(db: MetaDataDb, queue: BlockingQueueConnection) -> APIRouter:
+def router(db: MetaDataDb, queue: BlockingQueueConnection, static_path: Path) -> APIRouter:
     """Router for the database and queue endpoints.
 
     This function creates an APIRouter with two endpoints:
@@ -19,6 +22,7 @@ def router(db: MetaDataDb, queue: BlockingQueueConnection) -> APIRouter:
     Args:
         db (MetaDataDb): The metadata database handler.
         queue (BlockingQueueConnection): The message queue handler.
+        static_path (Path): The path to the directory where static files are stored.
 
     Returns:
         APIRouter: The configured API router.
@@ -94,5 +98,36 @@ def router(db: MetaDataDb, queue: BlockingQueueConnection) -> APIRouter:
         res = await db.get_job(data=MetadataDbGetRequest(job_id=job_id))
         logger.success(f"Successfully fetched job {job_id} status: {res.status}")
         return res
+
+    @router.get("/results/{job_id}", status_code=200)
+    async def results(job_id: str) -> Response:
+        """Get the results of a job by its job_id.
+
+        This function is handler for the /results/{job_id} endpoint.
+        It fetches the job results from the metadata database using the provided job_id.
+
+        Args:
+            job_id (str): The unique identifier for the job.
+
+        Returns:
+            str: content of the .m8 result file.
+
+        Raises:
+            HTTPException: If the job is not found (404) or if there is an unexpected error (500).
+        """
+        logger.info(f"Got GET request for results with {job_id}.")
+        result_file = static_path / f"{job_id}.m8"
+        logger.info(f"Searching for results in static path, {static_path}.")
+        if not result_file.exists() or not result_file.is_file():
+            logger.error(f"Results for job {job_id} not found.")
+            logger.error("Found files: " + ", ".join([str(f) for f in static_path.iterdir() if f.is_file()]))
+            raise HTTPException(status_code=404, detail=f"Results for job {job_id} not found.")
+        content = result_file.read_text()
+        if not content:
+            logger.error(f"Results for job {job_id} are empty.")
+            raise HTTPException(status_code=500, detail=f"Results for job {job_id} are empty.")
+        logger.info(f"Successfully fetched results for job {job_id}.")
+        logger.info(f"Results content: {content[:30]}...")
+        return Response(content=content, media_type="text/plain")
 
     return router
