@@ -29,8 +29,9 @@ class TestMetaDataDb:
         mock_response = AsyncMock()
         mock_response.status_code = status_code
         if json_data is not None:
-            mock_response.json.return_value = json_data
-        getattr(mock_client.__aenter__.return_value, method).return_value = mock_response
+            # httpx.Response.json() is a sync method, not async
+            mock_response.json = lambda: json_data
+        setattr(mock_client, method, AsyncMock(return_value=mock_response))
         return mock_client
 
     def _assert_http_exception(self, exc, status_code: int, detail_substr: str):
