@@ -71,8 +71,8 @@ def update_job(job_id: str, job: Job, session: SessionDep) -> Job:
 
     job_data = job.model_dump(exclude_unset=True)
     stored_job.sqlmodel_update(job_data)
-    if stored_job.status == "FINISHED":
-        stored_job.submitted_at = None
+    # if stored_job.status == "FINISHED":
+    #     stored_job.submitted_at = None
     session.add(stored_job)
     session.commit()
     session.refresh(stored_job)
