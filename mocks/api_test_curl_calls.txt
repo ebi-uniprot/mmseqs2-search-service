@@ -1,0 +1,3 @@
+curl -X POST localhost:8084/submit -H 'Content-Type: application/json' localhost:8084/submit -d @mocks/user_submit_job_to_api.json
+curl -X GET localhost:8084/status/8e7010fc2a7ff684c0c493a621e6507c -H 'Content-Type: application/json'
+curl -X GET localhost:8084/results/8e7010fc2a7ff684c0c493a621e6507c -H 'Content-Type: application/json'

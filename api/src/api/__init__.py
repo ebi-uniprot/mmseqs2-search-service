@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated
 
 import httpx
 import typer
@@ -22,7 +21,7 @@ cli = typer.Typer()
 class App:
     def __init__(
         self,
-        fasta_output_path: str,
+        mmseqs2_output_path: str,
         db_endpoint: str,
         db_port: int,
         queue_name: str,
@@ -32,7 +31,7 @@ class App:
         queue_host: str,
     ) -> None:
         """ASGI application."""
-        self.fasta_output_path = self._verify_static_files_path(fasta_output_path)
+        self.mmseqs2_output_path = self._verify_static_files_path(mmseqs2_output_path)
         self.httpx_client = httpx.AsyncClient()
         self.app = FastAPI()
 
@@ -61,7 +60,7 @@ class App:
         )
 
         # router
-        self.app.include_router(router(self.db, self.queue, self.fasta_output_path))
+        self.app.include_router(router(self.db, self.queue, self.mmseqs2_output_path))
 
     @staticmethod
     def _verify_static_files_path(p: str) -> Path:
@@ -92,7 +91,7 @@ class App:
         logger.info("Starting API w ith the following configuration:")
         logger.info(f"app_host: {host}")
         logger.info(f"app_port: {port}")
-        logger.info(f"fasta_output_path: {self.fasta_output_path}")
+        logger.info(f"mmseqs2_output_path: {self.mmseqs2_output_path}")
         logger.info(f"db_endpoint: {self.db_endpoint}")
         logger.info(f"db_port: {self.db_port}")
         logger.info(f"queue_name: {self.queue_name}")
@@ -107,8 +106,8 @@ class App:
 def run(
     app_port: Annotated[int, typer.Option(help="Port to run the application on", envvar="API_PORT")] = 8084,
     app_host: Annotated[str, typer.Option(help="Host to run the application on", envvar="API_HOST")] = "127.0.0.1",
-    fasta_output_path: Annotated[
-        str, typer.Option(help="Path to the FASTA output directory", envvar="API_FASTA_OUTPUT_PATH")
+    mmseqs2_output_path: Annotated[
+        str, typer.Option(help="Path to the MMseqs2 output directory", envvar="API_MMSEQS2_OUTPUT_PATH")
     ] = "/static",
     db_endpoint: Annotated[str, typer.Option(help="Database endpoint URL", envvar="DB_ENDPOINT")] = "127.0.0.1",
     db_port: Annotated[int, typer.Option(help="Database port", envvar="DB_PORT")] = 8085,
@@ -120,7 +119,7 @@ def run(
 ):
     """CLI command to run the API application."""
     app = App(
-        fasta_output_path=fasta_output_path,
+        mmseqs2_output_path=mmseqs2_output_path,
         db_endpoint=db_endpoint,
         db_port=db_port,
         queue_name=queue_name,
