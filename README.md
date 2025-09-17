@@ -9,7 +9,7 @@ cd deployment
 ./deploy_all.sh
 ```
 
-Once deployed, the script will return a Swagger Docs URL. Keep it running. Do not in the terminal. 
+Once deployed, the script will return a Swagger Docs URL. Keep it running. Do not close the terminal. 
 
 
 ⚠️ **Important:** Wait for the **worker chart** to be fully deployed before submitting a new job.
