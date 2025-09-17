@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: api
-  tag: 0.1.0
+  tag: dev
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
