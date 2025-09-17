@@ -239,21 +239,18 @@ class TestApi:
         mock_get_job.assert_called_once()
 
     def test_static_files_serving(self, client):
-        """Test /results/{filename} endpoint for non-existent file."""
-        response = client.get("/results/non_existent_file.fasta")
+        """Test /results/{job_id} endpoint for non-existent file."""
+        response = client.get("/results/non_existent_job_id")
         assert response.status_code == 404
-        assert "Not Found" in response.text
+        assert "Results for job non_existent_job_id not found." in response.text
 
     def test_static_files_serving_existing(self, client, static_files: Path):
-        """Test /results/{filename} endpoint for existing file."""
-        static = static_files / "sequence.fasta"
+        """Test /results/{job_id} endpoint for existing file."""
+        static = static_files / "sequence.m8"
         assert static.exists(), f"Static file does not exist: {static}"
         assert static.is_file(), f"Static file is not a file: {static}"
 
-        response = client.get("/results/sequence.fasta")
+        response = client.get("/results/sequence")
         assert response.status_code == 200
-        assert response.headers["content-type"] == "text/x-fasta"
-
-        # check the first line to see if it matches the fasta content
-        lines = response.text.splitlines()
-        assert lines[0].startswith(">sp|A0A0C5B5G6|MOTSC_HUMAN")
+        assert response.headers["content-type"] == "text/plain; charset=utf-8"
+        assert "some content" in response.text

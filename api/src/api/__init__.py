@@ -10,42 +10,13 @@ import httpx
 import typer
 import uvicorn
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from loguru import logger
-from starlette.responses import Response as StarletteResponse
 
 from api.controllers import router
 from api.handlers.broker import BlockingQueueConnection
 from api.handlers.db import MetaDataDb
 
 cli = typer.Typer()
-
-
-class CustomHeaderStaticFiles(StaticFiles):
-    """Custom StaticFiles to add headers to responses.
-
-    This class extends FastAPI's StaticFiles to include custom headers in the HTTP responses.
-
-    This class is used to serve static files (like FASTA files) with specific headers, such as setting the
-    Content-Type to "text/x-fasta" for FASTA files.
-    """
-
-    async def get_response(self, path: str, scope: MutableMapping[str, Any]) -> StarletteResponse:
-        """Get response with custom headers.
-
-        Args:
-            path (str): The path to the static file.
-            scope (MutableMapping[str, Any]): The ASGI scope.
-
-        Returns:
-            StarletteResponse: The response object with custom headers.
-        """
-        response = await super().get_response(path, scope)
-        # Set a custom header, e.g., Content-Type
-        if path.endswith(".fasta"):
-            response.headers["content-type"] = "text/x-fasta"
-        # Add other custom headers as needed
-        return response
 
 
 class App:
@@ -64,7 +35,6 @@ class App:
         self.fasta_output_path = self._verify_static_files_path(fasta_output_path)
         self.httpx_client = httpx.AsyncClient()
         self.app = FastAPI()
-        self.app.mount("/results", CustomHeaderStaticFiles(directory=self.fasta_output_path), name="static")
 
         # db
         self.db_port = db_port
@@ -91,7 +61,7 @@ class App:
         )
 
         # router
-        self.app.include_router(router(self.db, self.queue))
+        self.app.include_router(router(self.db, self.queue, self.fasta_output_path))
 
     @staticmethod
     def _verify_static_files_path(p: str) -> Path:
