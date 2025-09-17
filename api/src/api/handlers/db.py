@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 
 from fastapi import HTTPException
 from httpx import AsyncClient, Response
+from loguru import logger
 
 from api.models.db import MetadataDbGetRequest, MetaDataDbGetResponse, MetadataDbPostRequest, MetaDataDbPostResponse
 from api.status import TaskStatus
@@ -40,13 +41,12 @@ class MetaDataDb:
             HTTPException: If there is an unexpected error while posting the job (500).
 
         """
-        async with self.client as c:
-            resp = await c.post(url=self.post_job_url, data=data.model_dump())
-            match resp.status_code:
-                case 200:
-                    return MetaDataDbPostResponse(job_id=data.job_id, status=TaskStatus.QUEUED)
-                case _:
-                    raise HTTPException(status_code=500, detail=f"Unexpected error while posting job {data.job_id}.")
+        resp = await self.client.post(url=self.post_job_url, data=data.model_dump())
+        match resp.status_code:
+            case 200:
+                return MetaDataDbPostResponse(job_id=data.job_id, status=TaskStatus.QUEUED)
+            case _:
+                raise HTTPException(status_code=500, detail=f"Unexpected error while posting job {data.job_id}.")
 
     async def get_job_response(self, data: MetadataDbGetRequest) -> Response:
         """Intermediate step reused to run the get request to the metadata db.
@@ -61,9 +61,10 @@ class MetaDataDb:
         Returns:
             Response: httpx response object
         """
-        async with self.client as c:
-            job_url = urljoin(self.get_job_status_url, data.job_id)
-            return await c.get(url=job_url)
+        logger.info(f"Fetching job {data.job_id} from database.")
+        logger.info(f"GET {self.get_job_status_url}/{data.job_id}")
+        job_url = urljoin(self.get_job_status_url, data.job_id)
+        return await self.client.get(url=job_url)
 
     async def get_job(self, data: MetadataDbGetRequest) -> MetaDataDbGetResponse:
         """Get the job status from the metadata database.
