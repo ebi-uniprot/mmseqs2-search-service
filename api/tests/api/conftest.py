@@ -1,12 +1,26 @@
 """Test controllers."""
 
+from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
+from loguru import logger
 
 from api import App
+
+
+@pytest.fixture(autouse=True, scope="session")
+def disable_loguru_logs_for_testing(request: pytest.FixtureRequest) -> Generator[None, None, None]:
+    """Disable loguru logs for tests."""
+    if "enable_loguru" in request.keywords:
+        # Don't silence loguru if test is marked with @pytest.mark.enable_loguru
+        yield
+    else:
+        logger.remove()
+        yield
+        logger.add(lambda _: None)
 
 
 @pytest.fixture
