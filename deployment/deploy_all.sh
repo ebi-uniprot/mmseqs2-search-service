@@ -38,4 +38,4 @@ cd ..
 
 #=== Get API URL ===
 sleep 10
-minikube service mmseqs2-api --url
+echo "$(minikube service mmseqs2-api --url)/docs"
