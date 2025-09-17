@@ -36,4 +36,5 @@ cd ../deployment
 helm install mmseqs2-api ./api
 cd ..
 
+sleep 10
 minikube service mmseqs2-api --url
