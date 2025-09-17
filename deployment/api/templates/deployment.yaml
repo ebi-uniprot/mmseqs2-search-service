@@ -33,16 +33,15 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args: [
-            "run",
             "--app-port", "8080",
             "--app-host", "0.0.0.0",
-            "--fasta_output_path", "/static",
-            "--db_endpoint", "http://meta-database:8000",
-            "--queue_name", "task_queue",
-            "--queue_username", "user",
-            "--queue_passwd", "0A8Nrn1G1DCg7T8K",
-            "--queue_port", "5672",
-            "--queue_host", "my-release-rabbitmq"
+            "--fasta-output-path", "/static",
+            "--db-endpoint", "http://my-service:8080",
+            "--queue-name", "task_queue",
+            "--queue-username", "user",
+            "--queue-passwd", "0CTopmP8ppyZp9zi",
+            "--queue-port", "5672",
+            "--queue-host", "mmseqs-rabbitmq"
           ]
           ports:
             - name: http

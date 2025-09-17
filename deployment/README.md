@@ -36,7 +36,7 @@ exit
 
 ```
 cd deployment
-helm install worker-dev worker/
+helm install mmseqs-worker-dev worker/
 ```
 
 ### Publish Message to task_queue to test
