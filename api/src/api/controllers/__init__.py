@@ -120,12 +120,10 @@ def router(db: MetaDataDb, queue: BlockingQueueConnection, static_path: Path) ->
         logger.info(f"Searching for results in static path, {static_path}.")
         if not result_file.exists() or not result_file.is_file():
             logger.error(f"Results for job {job_id} not found.")
-            logger.error("Found files: " + ", ".join([str(f) for f in static_path.iterdir() if f.is_file()]))
             raise HTTPException(status_code=404, detail=f"Results for job {job_id} not found.")
         content = result_file.read_text()
         if not content:
             logger.error(f"Results for job {job_id} are empty.")
-            raise HTTPException(status_code=500, detail=f"Results for job {job_id} are empty.")
         logger.info(f"Successfully fetched results for job {job_id}.")
         logger.info(f"Results content: {content[:30]}...")
         return Response(content=content, media_type="text/plain")
