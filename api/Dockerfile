@@ -18,6 +18,10 @@ COPY pyproject.toml /app/pyproject.toml
 COPY uv.lock /app/uv.lock
 COPY README.md /app/README.md
 
+ENV QUEUE_PASSWD=mypassword123 \
+    QUEUE_USERNAME=user \
+    QUEUE_HOST=rabbitmq \
+    QUEUE_NAME=task_queue
 # Build the executable
 WORKDIR /app
 RUN python -m pip install .
