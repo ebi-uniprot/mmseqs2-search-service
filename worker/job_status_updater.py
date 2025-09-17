@@ -1,6 +1,7 @@
-
+import json
 import logging
 import requests
+
 
 class JobStatusUpdater:
     """Handles updating job status in the database via API call."""
@@ -18,6 +19,7 @@ class JobStatusUpdater:
             payload = {"status": job_status, "completed_at": timestamp}
 
         try:
+            logging.info(f"Sending to {api_url} payload: {json.dumps(payload)}")
             response = requests.patch(api_url, json=payload)
             response.raise_for_status()
             logging.info(f"Updated job {job_id} status to {job_status}")

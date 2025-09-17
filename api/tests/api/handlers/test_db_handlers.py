@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -26,11 +26,12 @@ class TestMetaDataDb:
     def _setup_mock_response(self, m_async_client: AsyncMock, method: str, status_code: int, json_data=None):
         """Helper to setup mock response for AsyncClient methods."""
         mock_client = m_async_client.return_value
-        mock_response = MagicMock()
+        mock_response = AsyncMock()
         mock_response.status_code = status_code
         if json_data is not None:
-            mock_response.json.return_value = json_data
-        getattr(mock_client.__aenter__.return_value, method).return_value = mock_response
+            # httpx.Response.json() is a sync method, not async
+            mock_response.json = lambda: json_data
+        setattr(mock_client, method, AsyncMock(return_value=mock_response))
         return mock_client
 
     def _assert_http_exception(self, exc, status_code: int, detail_substr: str):
@@ -40,7 +41,7 @@ class TestMetaDataDb:
         assert detail_substr in str(exc.value.detail)
 
     @pytest.mark.asyncio
-    @patch("api.handlers.db.AsyncClient")
+    @patch("api.handlers.db.AsyncClient", new_callable=AsyncMock)
     async def test_get_job_not_found(self, m_async_client: AsyncMock, endpoint: str, job_id: str):
         """Test get method returns 404 response and proper details."""
         # Patch the context manager's get method to return a real Response
@@ -52,7 +53,7 @@ class TestMetaDataDb:
         self._assert_http_exception(exc, 404, f"Failed to fetch {job_id} from database.")
 
     @pytest.mark.asyncio
-    @patch("api.handlers.db.AsyncClient")
+    @patch("api.handlers.db.AsyncClient", new_callable=AsyncMock)
     async def test_get_job_unexpected_error(self, m_async_client: AsyncMock, endpoint: str, job_id: str):
         """Test get method returns 500 response and proper details."""
         self._setup_mock_response(m_async_client, "get", 500)
@@ -63,7 +64,7 @@ class TestMetaDataDb:
         self._assert_http_exception(exc, 500, f"Unexpected error while fetching job status for {job_id}.")
 
     @pytest.mark.asyncio
-    @patch("api.handlers.db.AsyncClient")
+    @patch("api.handlers.db.AsyncClient", new_callable=AsyncMock)
     async def test_get_job_found(self, m_async_client: AsyncMock, endpoint: str, job_id: str):
         """Test get method returns 200 response with a json body."""
         resp_obj = MetaDataDbGetResponse(job_id=job_id, status=TaskStatus.FINISHED)
@@ -76,7 +77,7 @@ class TestMetaDataDb:
         assert result.status == TaskStatus.FINISHED
 
     @pytest.mark.asyncio
-    @patch("api.handlers.db.AsyncClient")
+    @patch("api.handlers.db.AsyncClient", new_callable=AsyncMock)
     async def test_post_job_success(self, m_async_client: AsyncMock, endpoint: str, job_id: str):
         """Test post method returns 200 response with a json body."""
         resp_obj = MetaDataDbPostResponse(job_id=job_id, status=TaskStatus.QUEUED).model_dump()
@@ -89,7 +90,7 @@ class TestMetaDataDb:
         assert isinstance(resp, MetaDataDbPostResponse)
 
     @pytest.mark.asyncio
-    @patch("api.handlers.db.AsyncClient")
+    @patch("api.handlers.db.AsyncClient", new_callable=AsyncMock)
     async def test_post_job_unexpected_error(self, m_async_client: AsyncMock, endpoint: str, job_id: str):
         """Test post method returns 500 response and proper details."""
         self._setup_mock_response(m_async_client, "post", 500)

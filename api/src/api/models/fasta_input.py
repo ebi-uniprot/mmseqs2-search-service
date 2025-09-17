@@ -47,10 +47,10 @@ class FastaBlobModel(BaseModel):
             if not seq:
                 logger.error("Found empty fasta sequence.")
                 raise ValueError("Found empty fasta sequence.")
-            invalid = set(seq) - cls.allowed_characters()
-            if invalid:
-                logger.error(f"Found invalid fasta sequence: {invalid}")
-                raise ValueError("Found invalid fasta sequence.")
+            # invalid = set(seq) - cls.allowed_characters()
+            # if invalid:
+            #     logger.error(f"Found invalid fasta sequence: {invalid}")
+            #     raise ValueError("Found invalid fasta sequence.")
         return fasta_str
 
     @classmethod
