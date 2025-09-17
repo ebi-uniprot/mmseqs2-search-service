@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mmseqs2-db
+  name: mmseqs2-metadb
   labels:
-    app: mmseqs2-db
+    app: mmseqs2-metadb
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mmseqs2-db
+      app: mmseqs2-metadb
   template:
     metadata:
       labels:
-        app: mmseqs2-db
+        app: mmseqs2-metadb
     spec:
       containers:
         - name: metadb
