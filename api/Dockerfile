@@ -21,7 +21,8 @@ COPY README.md /app/README.md
 ENV QUEUE_PASSWD=mypassword123 \
     QUEUE_USERNAME=user \
     QUEUE_HOST=rabbitmq \
-    QUEUE_NAME=task_queue
+    QUEUE_NAME=task_queue \
+    QUEUE_HOST=my-release-rabbitmq
 # Build the executable
 WORKDIR /app
 RUN python -m pip install .

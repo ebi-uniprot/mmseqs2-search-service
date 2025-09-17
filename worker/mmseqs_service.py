@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import subprocess
 import logging
@@ -24,9 +25,10 @@ class MMSeqsService(object):
     def mmseqs2_search(self, job):
         """Run mmseqs easy-search on a FASTA sequence from the job."""
 
+        logging.info(f"Starting mmseqs2_search with job: {json.dumps(job)}")
         job_id, fasta_content = self.extract_job_id_fasta(job)
 
-        logging.info(f"Processing job_id: {job_id}")
+        logging.info(f"job_id: {job_id} and fasta_content: {fasta_content}")
 
         with tempfile.TemporaryDirectory(dir=self.workspace_path) as tmpdirname:
             temp_dir = Path(tmpdirname)
@@ -38,7 +40,7 @@ class MMSeqsService(object):
 
             result_file = temp_dir / f"{job_id}.m8"
             cmd = self.prepare_mmseqs_cmd(result_file, temp_dir, query_file)
-
+            logging.info(f"Running mmseqs command: {' '.join(cmd)}")
             try:
                 subprocess.run(cmd, check=True, capture_output=True)
             except subprocess.CalledProcessError as e:
@@ -47,6 +49,7 @@ class MMSeqsService(object):
 
             # Move the result to results folder
             final_result_file = self.result_path / f"{job_id}.m8"
+            logging.info(f"Moving result from {result_file} to {final_result_file}")
             shutil.move(str(result_file), final_result_file)
             logging.info(f"Result saved to {final_result_file}")
 
@@ -68,6 +71,8 @@ class MMSeqsService(object):
     def prepare_mmseqs_cmd(self, result_file, temp_dir, query_file):
         # This will be created and populated by mmseqs
         mmseqs_tmp_dir = temp_dir / "tmp"
+
+        logging.info(f"mmseqs tmp dir: {mmseqs_tmp_dir}")
 
         # build mmseqs easy-search command
         cmd = [
